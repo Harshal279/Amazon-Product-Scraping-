@@ -1,0 +1,56 @@
+import requests
+from bs4 import BeautifulSoup
+import csv
+
+# Initialize variables
+base_url = "https://www.amazon.in/s?k=bags&crid=2M096C61O4MLT&qid=1653308124&sprefix=ba%2Caps%2C283&ref=sr_pg_1"
+page_limit = 20
+
+csv_file = open("amazon_products3122.csv", "w", newline="", encoding="utf-8")
+csv_writer = csv.writer(csv_file)
+csv_writer.writerow(["Product URL", "Product Name", "Product Price", "Rating", "Number of Reviews"])
+
+# Loop through multiple pages
+for page in range(1, page_limit + 1):
+    url = f"{base_url}&page={page}"
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, "html.parser")
+
+    # Extract product details
+    product_cards = soup.find_all("div", class_="s-result-item")
+    for card in product_cards:
+        product_url_element = card.find("a", class_="a-link-normal")
+        if product_url_element:
+            product_url = "https://www.amazon.in" + product_url_element.get("href")
+        else:
+            product_url = "N/A"
+        
+        product_name_element = card.find("span", class_="a-text-normal")
+        if product_name_element:
+            product_name = product_name_element.text
+        else:
+            product_name = "N/A"
+        
+        product_price_element = card.find("span", class_="a-price")
+        if product_price_element:
+            product_price = product_price_element.find("span", class_="a-offscreen").text
+        else:
+            product_price = "N/A"
+        
+        rating_element = card.find("span", class_="a-icon-alt")
+        if rating_element:
+            rating = rating_element.text
+        else:
+            rating = "N/A"
+        
+        reviews_count_element = card.find("span", class_="a-size-base")
+        if reviews_count_element:
+            reviews_count = reviews_count_element.text
+        else:
+            reviews_count = "N/A"
+
+        # Write data to CSV
+        csv_writer.writerow([product_url, product_name, product_price, rating, reviews_count])
+
+# Close CSV file
+csv_file.close()
